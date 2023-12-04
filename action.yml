@@ -1,0 +1,20 @@
+name: 'To Reuse'
+inputs:
+  bento_file:
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: PWD
+      run: pwd
+    - name: List files in directory
+      run: ls -R
+    - name: Echos
+      run: echo 'bento_file:'${{ inputs.bento_file }}
+    - name: 'To Resuse '
+      shell: bash
+      run: |
+        cat ${{ inputs.bento_file }}
+          
