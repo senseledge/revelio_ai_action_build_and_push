@@ -1,14 +1,32 @@
-name: 'To Reuse'
+name: 'Build and Push'
 inputs:
   bento_file:
+    required: true
+    type: string
+  package_name:
+    required: true
+    type: string
+  tag:
     required: true
     type: string
 
 runs:
   using: "composite"
   steps:
-    - name: 'To Reuse '
+    - name: 'bentoml build ${{ inputs.package_name }}'
       shell: bash
       run: |
-        cat ${{ inputs.bento_file }}
+        output=$(bentoml build -f ${{ inputs.bento_file }} -o tag --containerize -q)
+        tag_value=$(echo "$output" | awk -F':' '{print $3}' | tr -d '[:space:]')
+        echo "Il valore di __tag__ è: $tag_value"
+        command="docker tag ${{ inputs.package_name }}:$tag_value ghcr.io/senseledge/${{ github.event.repository.name }}/${{ inputs.package_name }}:latest"
+        echo "executing $command"
+        eval $command
+        command="docker tag ${{ inputs.package_name }}:$tag_value ghcr.io/senseledge/${{ github.event.repository.name }}/${{ inputs.package_name }}:${{ inputs.tag }}"
+        echo "executing $command"
+        eval $command
+        docker images
+    - name: 'Docker Push ${{ inputs.package_name }}'
+      shell: bash
+      run: docker push --all-tags ghcr.io/senseledge/${{ github.event.repository.name }}/${{ inputs.package_name }}
           
